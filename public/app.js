@@ -50,6 +50,15 @@ function clearUpload() {
   syncRunBtn();
 }
 
+const MAX_DIM = 1024;
+
+function fitDims(w, h) {
+  const longest = Math.max(w, h);
+  if (longest <= MAX_DIM) return { w, h };
+  const s = MAX_DIM / longest;
+  return { w: Math.round(w * s), h: Math.round(h * s) };
+}
+
 async function processFile(file) {
   const isSvg = file.type === 'image/svg+xml' || file.name.endsWith('.svg');
   const isPng = file.type === 'image/png' || file.name.endsWith('.png');
@@ -61,7 +70,6 @@ async function processFile(file) {
       const png = await svgToPng(file);
       imageBase64 = png;
       imageMimeType = 'image/png';
-      // Show original SVG as preview
       const url = URL.createObjectURL(file);
       logoPreview.src = url;
       logoPreview.onload = () => URL.revokeObjectURL(url);
@@ -74,10 +82,25 @@ async function processFile(file) {
       const reader = new FileReader();
       reader.onload = e => {
         const dataUrl = e.target.result;
-        imageBase64 = dataUrl.split(',')[1];
-        imageMimeType = 'image/png';
-        logoPreview.src = dataUrl;
-        resolve();
+        const img = new Image();
+        img.onload = () => {
+          const { w, h } = fitDims(img.naturalWidth, img.naturalHeight);
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob(blob => {
+            const fr = new FileReader();
+            fr.onload = ev => {
+              imageBase64 = ev.target.result.split(',')[1];
+              imageMimeType = 'image/png';
+              logoPreview.src = dataUrl;
+              resolve();
+            };
+            fr.readAsDataURL(blob);
+          }, 'image/png', 0.92);
+        };
+        img.src = dataUrl;
       };
       reader.readAsDataURL(file);
     });
@@ -96,13 +119,10 @@ function svgToPng(file) {
       const url = URL.createObjectURL(blob);
       const img = new Image();
       img.onload = () => {
-        const w = img.naturalWidth  || 800;
-        const h = img.naturalHeight || 400;
-        const scale = 2;
-        canvas.width  = w * scale;
-        canvas.height = h * scale;
+        const { w, h } = fitDims(img.naturalWidth || 800, img.naturalHeight || 400);
+        canvas.width  = w;
+        canvas.height = h;
         const ctx = canvas.getContext('2d');
-        ctx.scale(scale, scale);
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, w, h);
         ctx.drawImage(img, 0, 0, w, h);
