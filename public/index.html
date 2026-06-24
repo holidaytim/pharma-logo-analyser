@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pharma Logo Analyser</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="header-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M9 9h6M9 12h4M9 15h2"/>
+          <path d="M16 13l2 2 2-2"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Pharma Logo Analyser</h1>
+        <p>Pharmaceutical brand &amp; regulatory audit tool</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="input-panel">
+
+      <!-- Upload zone -->
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept=".png,.svg,image/png,image/svg+xml">
+        <div class="upload-placeholder" id="uploadPlaceholder">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <p>Drop PNG or SVG here</p>
+          <span>or click to browse</span>
+        </div>
+        <div class="preview-area" id="previewArea">
+          <img id="logoPreview" alt="Logo preview">
+          <button class="remove-btn" id="removeBtn" type="button" title="Remove">×</button>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="settings-form">
+        <div class="field">
+          <label for="brandName">Brand / Drug Name <span class="required">*</span></label>
+          <input type="text" id="brandName" placeholder="e.g. SKYRIZI" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="innName">INN / Generic Name</label>
+          <input type="text" id="innName" placeholder="e.g. risankizumab" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="context">Analysis Context</label>
+          <select id="context">
+            <option value="both">Labelling &amp; Promotional</option>
+            <option value="labelling">Labelling / Packaging only</option>
+            <option value="promotional">Promotional / DTC only</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="auditType">Audit Type</label>
+          <select id="auditType">
+            <option value="competitor">Competitor brand audit</option>
+            <option value="own">Own brand review</option>
+          </select>
+        </div>
+        <div class="run-btn-wrap">
+          <button class="run-btn" id="runBtn" type="button" disabled>
+            <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <div class="spinner"></div>
+            <span class="btn-text">Analyse Logo</span>
+          </button>
+          <span class="status-msg" id="statusMsg"></span>
+        </div>
+        <div class="error-msg" id="errorMsg"></div>
+      </div>
+
+    </div>
+
+    <!-- Report -->
+    <section class="report-section" id="reportSection"></section>
+  </main>
+
+  <canvas id="conversionCanvas" style="display:none" aria-hidden="true"></canvas>
+  <script src="app.js"></script>
+</body>
+</html>
