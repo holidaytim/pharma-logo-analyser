@@ -154,55 +154,51 @@ export default async function handler(req) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return json({ error: 'API key not configured' }, 500);
 
-  try {
-    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5',
-        max_tokens: 3000,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: mimeType || 'image/png',
-                  data: imageBase64,
-                },
+  const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5',
+      max_tokens: 3000,
+      stream: true,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: mimeType || 'image/png',
+                data: imageBase64,
               },
-              {
-                type: 'text',
-                text: ANALYSIS_PROMPT(brandName, innName, context, auditType),
-              },
-            ],
-          },
-        ],
-      }),
-    });
+            },
+            {
+              type: 'text',
+              text: ANALYSIS_PROMPT(brandName, innName, context, auditType),
+            },
+          ],
+        },
+      ],
+    }),
+  });
 
-    if (!anthropicRes.ok) {
-      const errText = await anthropicRes.text();
-      return json({ error: `Anthropic API error ${anthropicRes.status}: ${errText}` }, 500);
-    }
-
-    const data = await anthropicRes.json();
-    const raw = data.content[0].text.trim();
-    const jsonStr = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```$/m, '').trim();
-    const analysis = JSON.parse(jsonStr);
-    return json(analysis);
-
-  } catch (err) {
-    console.error('Analysis error:', err);
-    if (err instanceof SyntaxError) {
-      return json({ error: 'Failed to parse AI response. Please try again.' }, 500);
-    }
-    return json({ error: err.message || 'Analysis failed' }, 500);
+  if (!anthropicRes.ok) {
+    const errText = await anthropicRes.text();
+    return json({ error: `Anthropic API error ${anthropicRes.status}: ${errText}` }, 500);
   }
+
+  // Pipe Anthropic's SSE stream straight to the browser — tokens flow as
+  // they're generated so Vercel's timeout never triggers
+  return new Response(anthropicRes.body, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
 }
