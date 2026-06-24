@@ -50,7 +50,7 @@ function clearUpload() {
   syncRunBtn();
 }
 
-const MAX_DIM = 1024;
+const MAX_DIM = 750;
 
 function fitDims(w, h) {
   const longest = Math.max(w, h);
