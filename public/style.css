@@ -579,3 +579,49 @@ main {
   line-height: 1.45;
 }
 .recs li::before { content: '→'; position: absolute; left: 0; color: var(--blue); font-weight: 600; }
+
+/* ── Simulation grids ──────────────────────────────────────────────────────── */
+.sim-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.sim-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.sim-img {
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  display: block;
+  max-width: 150px;
+  max-height: 150px;
+  width: auto;
+  height: auto;
+  background: #fff;
+  object-fit: contain;
+}
+
+.sim-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.size-thumb {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border: 1px solid #e2e8f0;
+}
