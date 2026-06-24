@@ -1,6 +1,7 @@
 // ── State ──────────────────────────────────────────────────────────────────
 let imageBase64 = null;
 let imageMimeType = null;
+let logoImage     = null;
 
 // ── DOM refs ───────────────────────────────────────────────────────────────
 const uploadZone      = document.getElementById('uploadZone');
@@ -43,6 +44,7 @@ brandNameInput.addEventListener('input', syncRunBtn);
 function clearUpload() {
   imageBase64 = null;
   imageMimeType = null;
+  logoImage = null;
   fileInput.value = '';
   logoPreview.src = '';
   previewArea.classList.remove('visible');
@@ -108,6 +110,8 @@ async function processFile(file) {
 
   uploadPlaceholder.style.display = 'none';
   previewArea.classList.add('visible');
+  logoImage = new Image();
+  logoImage.src = `data:${imageMimeType};base64,${imageBase64}`;
   syncRunBtn();
 }
 
@@ -142,6 +146,91 @@ function svgToPng(file) {
 
 function syncRunBtn() {
   runBtn.disabled = !(imageBase64 && brandNameInput.value.trim());
+}
+
+
+// ── Visual simulations ─────────────────────────────────────────────────────
+const MATRICES = {
+  grayscale:    [0.299,0.587,0.114, 0.299,0.587,0.114, 0.299,0.587,0.114],
+  protanopia:   [0.567,0.433,0,     0.558,0.442,0,     0,    0.242,0.758],
+  deuteranopia: [0.625,0.375,0,     0.700,0.300,0,     0,    0.300,0.700],
+  tritanopia:   [0.950,0.050,0,     0,    0.433,0.567,  0,    0.475,0.525],
+};
+
+function applyMatrix(d, m) {
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i], g = d[i+1], b = d[i+2];
+    d[i]   = Math.min(255, m[0]*r + m[1]*g + m[2]*b);
+    d[i+1] = Math.min(255, m[3]*r + m[4]*g + m[5]*b);
+    d[i+2] = Math.min(255, m[6]*r + m[7]*g + m[8]*b);
+  }
+}
+
+const FILTERS = {
+  grayscale:    d => applyMatrix(d, MATRICES.grayscale),
+  protanopia:   d => applyMatrix(d, MATRICES.protanopia),
+  deuteranopia: d => applyMatrix(d, MATRICES.deuteranopia),
+  tritanopia:   d => applyMatrix(d, MATRICES.tritanopia),
+  binarize: d => {
+    applyMatrix(d, MATRICES.grayscale);
+    for (let i = 0; i < d.length; i += 4) {
+      const v = d[i] > 180 ? 255 : 0;
+      d[i] = d[i+1] = d[i+2] = v;
+    }
+  },
+  invert: d => {
+    for (let i = 0; i < d.length; i += 4) {
+      d[i] = 255-d[i]; d[i+1] = 255-d[i+1]; d[i+2] = 255-d[i+2];
+    }
+  },
+};
+
+function makeSim(bgColor, filterKey) {
+  if (!logoImage?.complete || !logoImage.naturalWidth) return '';
+  const MAX = 150;
+  const scale = MAX / Math.max(logoImage.naturalWidth, logoImage.naturalHeight);
+  const w = Math.max(1, Math.round(logoImage.naturalWidth * scale));
+  const h = Math.max(1, Math.round(logoImage.naturalHeight * scale));
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = bgColor || '#fff';
+  ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(logoImage, 0, 0, w, h);
+  if (filterKey && FILTERS[filterKey]) {
+    const id = ctx.getImageData(0, 0, w, h);
+    FILTERS[filterKey](id.data);
+    ctx.putImageData(id, 0, 0);
+  }
+  return cv.toDataURL();
+}
+
+function simGrid(items) {
+  if (!logoImage?.complete) return '';
+  const cells = items.map(({ label, bg, filter }) => {
+    const url = makeSim(bg || '#fff', filter || null);
+    return url ? `<div class="sim-item"><img src="${url}" alt="${label}" class="sim-img"><div class="sim-label">${label}</div></div>` : '';
+  }).join('');
+  return cells ? `<div class="sim-grid">${cells}</div>` : '';
+}
+
+function sizeGrid() {
+  if (!logoImage?.complete) return '';
+  const sizes = [128, 64, 32, 16];
+  const cells = sizes.map(size => {
+    const cv = document.createElement('canvas');
+    cv.width = size; cv.height = size;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, size, size);
+    const r = Math.min(size / logoImage.naturalWidth, size / logoImage.naturalHeight);
+    const dw = Math.round(logoImage.naturalWidth * r);
+    const dh = Math.round(logoImage.naturalHeight * r);
+    ctx.drawImage(logoImage, Math.round((size-dw)/2), Math.round((size-dh)/2), dw, dh);
+    const display = Math.max(size, 64);
+    return `<div class="sim-item"><img src="${cv.toDataURL()}" class="sim-img size-thumb" style="width:${display}px;height:${display}px"><div class="sim-label">${size}×${size}px</div></div>`;
+  }).join('');
+  return `<div class="sim-grid">${cells}</div>`;
 }
 
 // ── Analysis ───────────────────────────────────────────────────────────────
@@ -387,6 +476,7 @@ function buildDetail(id, test) {
         { label: 'Digital ad',             value: cap(test.digitalAd),    cls: test.digitalAd    },
         test.minimumRecommendedSize ? { label: 'Min. recommended size', value: test.minimumRecommendedSize, cls: '' } : null,
       ].filter(Boolean));
+      h += sizeGrid();
       break;
 
     case 'brandPersonality':
@@ -402,6 +492,13 @@ function buildDetail(id, test) {
     case 'colorblindness':
       if (test.affectedTypes?.length)
         h += `<div class="trait-tags">${test.affectedTypes.map(t => `<span class="trait-tag amber">${esc(t)}</span>`).join('')}</div>`;
+      h += simGrid([
+        { label: 'Normal vision',  bg: '#fff', filter: null },
+        { label: 'Deuteranopia',   bg: '#fff', filter: 'deuteranopia' },
+        { label: 'Protanopia',     bg: '#fff', filter: 'protanopia' },
+        { label: 'Tritanopia',     bg: '#fff', filter: 'tritanopia' },
+        { label: 'Achromatopsia',  bg: '#fff', filter: 'grayscale' },
+      ]);
       break;
 
     case 'monochrome':
@@ -409,6 +506,12 @@ function buildDetail(id, test) {
         test.faxPerformance          ? { label: 'Fax / thermal print',          value: cap(test.faxPerformance),          cls: test.faxPerformance } : null,
         test.regulatorySubmissionRisk? { label: 'Regulatory submission risk',    value: cap(test.regulatorySubmissionRisk),cls: test.regulatorySubmissionRisk } : null,
       ].filter(Boolean));
+      h += simGrid([
+        { label: 'Colour',    bg: '#fff', filter: null },
+        { label: 'Greyscale', bg: '#fff', filter: 'grayscale' },
+        { label: 'Positive',  bg: '#fff', filter: 'binarize' },
+        { label: 'Negative',  bg: '#fff', filter: 'invert' },
+      ]);
       break;
 
     case 'contrast':
@@ -416,6 +519,12 @@ function buildDetail(id, test) {
         test.wcagLevel               ? { label: 'WCAG level',       value: test.wcagLevel,                    cls: test.wcagLevel === 'below-AA' ? 'fail' : test.wcagLevel === 'AA' ? 'warn' : 'pass' } : null,
         test.darkBackgroundPerformance?{ label: 'Dark background',   value: cap(test.darkBackgroundPerformance),cls: test.darkBackgroundPerformance } : null,
       ].filter(Boolean));
+      h += simGrid([
+        { label: 'White',      bg: '#ffffff', filter: null },
+        { label: 'Light grey', bg: '#cccccc', filter: null },
+        { label: 'Dark grey',  bg: '#555555', filter: null },
+        { label: 'Black',      bg: '#000000', filter: null },
+      ]);
       break;
 
     case 'fdaGuidance':
@@ -426,6 +535,8 @@ function buildDetail(id, test) {
 
   if (test.recommendations?.length)
     h += `<div class="recs"><div class="recs-title">Recommendations</div><ul>${test.recommendations.map(r => `<li>${esc(r)}</li>`).join('')}</ul></div>`;
+  else if (test.recommendation)
+    h += `<div class="recs"><div class="recs-title">Recommendation</div><p class="detail-text">${esc(test.recommendation)}</p></div>`;
 
   return h;
 }
