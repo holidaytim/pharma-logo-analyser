@@ -20,7 +20,7 @@ Examine the logo carefully and return ONLY a valid JSON object — no markdown, 
       "score": <integer 0-100>,
       "status": "<pass|warn|fail>",
       "headline": "<one sentence finding>",
-      "detail": "<1-2 sentences>",
+      "detail": "<1 sentence>",
       "regulations": ["<specific regulation cited, e.g. 21 CFR 201.10(g)(1)>"],
       "recommendation": "<one actionable recommendation>"
     },
@@ -28,94 +28,92 @@ Examine the logo carefully and return ONLY a valid JSON object — no markdown, 
       "score": <integer 0-100>,
       "status": "<pass|warn|fail>",
       "headline": "<one sentence finding>",
-      "detail": "<1-2 sentences>",
+      "detail": "<1 sentence>",
       "labellingStatus": "<pass|warn|fail|na>",
       "promotionalStatus": "<pass|warn|fail|na>",
       "brandNameRelativeSize": <integer 1-10, where 10 is the largest element>,
       "innRelativeSize": <integer 1-10>,
       "estimatedRatioPercent": <integer, INN size as % of brand name size>,
       "fdaRequirementPercent": 50,
-      "recommendations": ["<actionable recommendation>"]
+      "recommendation": "<one actionable recommendation>"
     },
     "regulatoryLegibility": {
       "score": <integer 0-100>,
       "status": "<pass|warn|fail>",
       "headline": "<one sentence finding>",
-      "detail": "<1-2 sentences>",
-      "recommendations": ["<recommendation>"]
+      "detail": "<1 sentence>",
+      "recommendation": "<one actionable recommendation>"
     },
     "colorblindness": {
       "score": <integer 0-100>,
       "status": "<pass|warn|fail>",
       "headline": "<one sentence finding>",
-      "detail": "<1-2 sentences>",
+      "detail": "<1 sentence>",
       "affectedTypes": ["<e.g. deuteranopia, protanopia, tritanopia>"],
-      "recommendations": ["<recommendation>"]
+      "recommendation": "<one actionable recommendation>"
     },
     "monochrome": {
       "score": <integer 0-100>,
       "status": "<pass|warn|fail>",
       "headline": "<one sentence finding>",
-      "detail": "<1-2 sentences>",
+      "detail": "<1 sentence>",
       "faxPerformance": "<pass|warn|fail>",
       "regulatorySubmissionRisk": "<low|medium|high>",
-      "recommendations": ["<recommendation>"]
+      "recommendation": "<one actionable recommendation>"
     },
     "contrast": {
       "score": <integer 0-100>,
       "status": "<pass|warn|fail>",
       "headline": "<one sentence finding>",
-      "detail": "<1-2 sentences>",
+      "detail": "<1 sentence>",
       "wcagLevel": "<AAA|AA|below-AA>",
       "darkBackgroundPerformance": "<pass|warn|fail>",
-      "recommendations": ["<recommendation>"]
+      "recommendation": "<one actionable recommendation>"
     },
     "sizeScaling": {
       "score": <integer 0-100>,
       "status": "<pass|warn|fail>",
       "headline": "<one sentence finding>",
-      "detail": "<1-2 sentences>",
+      "detail": "<1 sentence>",
       "pillBottle": "<pass|warn|fail>",
       "packageInsert": "<pass|warn|fail>",
       "digitalAd": "<pass|warn|fail>",
       "minimumRecommendedSize": "<e.g. 15mm width minimum>",
-      "recommendations": ["<recommendation>"]
+      "recommendation": "<one actionable recommendation>"
     },
     "balance": {
       "score": <integer 0-100>,
       "status": "<pass|warn|fail>",
       "headline": "<one sentence finding>",
-      "detail": "<1-2 sentences>",
+      "detail": "<1 sentence>",
       "visualWeightDistribution": "<e.g. centred, left-heavy, right-heavy>",
-      "recommendations": ["<recommendation>"]
+      "recommendation": "<one actionable recommendation>"
     },
     "brandPersonality": {
       "score": <integer 0-100>,
       "status": "<pass|warn|fail>",
       "headline": "<one sentence finding>",
-      "detail": "<1-2 sentences>",
-      "traits": ["<trait 1>", "<trait 2>", "<trait 3>", "<trait 4>"],
-      "patientPerception": "<one sentence on how patients likely perceive this brand>",
-      "hcpPerception": "<one sentence on how HCPs likely perceive this brand>",
-      "recommendations": ["<recommendation>"]
+      "detail": "<1 sentence>",
+"traits": ["<trait 1>", "<trait 2>"],
+      "recommendation": "<one recommendation>"
     },
     "therapeuticAreaFit": {
       "score": <integer 0-100>,
       "status": "<pass|warn|fail>",
       "headline": "<one sentence finding>",
-      "detail": "<1-2 sentences>",
+      "detail": "<1 sentence>",
       "inferredArea": "<e.g. immunology, oncology, cardiology, rare disease>",
       "colorMoodAlignment": "<positive|neutral|misaligned>",
-      "recommendations": ["<recommendation>"]
+      "recommendation": "<one actionable recommendation>"
     },
     "containersProportions": {
       "score": <integer 0-100>,
       "status": "<pass|warn|fail>",
       "headline": "<one sentence finding>",
-      "detail": "<1-2 sentences>",
+      "detail": "<1 sentence>",
       "aspectRatioAssessment": "<e.g. well-proportioned, overly wide, overly tall>",
       "containerEffect": "<description of any enclosure, framing, or bounding elements>",
-      "recommendations": ["<recommendation>"]
+      "recommendation": "<one actionable recommendation>"
     }
   }
 }
@@ -163,7 +161,7 @@ export default async function handler(req) {
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5',
-      max_tokens: 1500,
+      max_tokens: 2000,
       stream: true,
       messages: [
         {
