@@ -1,5 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk';
-
 export const config = { runtime: 'edge' };
 
 const ANALYSIS_PROMPT = (brandName, innName, context, auditType) => `You are a pharmaceutical brand and regulatory expert with deep knowledge of FDA drug labeling guidelines, EMA standards, and pharmaceutical brand design best practices.
@@ -153,34 +151,49 @@ export default async function handler(req) {
   if (!imageBase64) return json({ error: 'imageBase64 is required' }, 400);
   if (!brandName) return json({ error: 'brandName is required' }, 400);
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return json({ error: 'API key not configured' }, 500);
 
   try {
-    const response = await client.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 4096,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: mimeType || 'image/png',
-                data: imageBase64,
+    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 3000,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: mimeType || 'image/png',
+                  data: imageBase64,
+                },
               },
-            },
-            {
-              type: 'text',
-              text: ANALYSIS_PROMPT(brandName, innName, context, auditType),
-            },
-          ],
-        },
-      ],
+              {
+                type: 'text',
+                text: ANALYSIS_PROMPT(brandName, innName, context, auditType),
+              },
+            ],
+          },
+        ],
+      }),
     });
 
-    const raw = response.content[0].text.trim();
+    if (!anthropicRes.ok) {
+      const errText = await anthropicRes.text();
+      return json({ error: `Anthropic API error ${anthropicRes.status}: ${errText}` }, 500);
+    }
+
+    const data = await anthropicRes.json();
+    const raw = data.content[0].text.trim();
     const jsonStr = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```$/m, '').trim();
     const analysis = JSON.parse(jsonStr);
     return json(analysis);
