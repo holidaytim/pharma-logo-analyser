@@ -151,7 +151,7 @@ async function runAnalysis() {
   if (runBtn.disabled) return;
   hideError();
   setLoading(true);
-  setStatus('Analysing logo — this may take 20–30 seconds…');
+  setStatus('Analysing logo…');
 
   try {
     const res = await fetch('/api/analyse', {
@@ -172,7 +172,34 @@ async function runAnalysis() {
       throw new Error(err.error || `HTTP ${res.status}`);
     }
 
-    const analysis = await res.json();
+    // Consume Anthropic SSE stream, accumulate text_delta events into full JSON
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    let fullText = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() ?? '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (!data || data === '[DONE]') continue;
+        try {
+          const evt = JSON.parse(data);
+          if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+            fullText += evt.delta.text;
+          }
+        } catch { /* ignore malformed SSE lines */ }
+      }
+    }
+
+    if (!fullText) throw new Error('No response received from AI');
+    const jsonStr = fullText.replace(/^```(?:json)?\s*/m, '').replace(/\s*```$/m, '').trim();
+    const analysis = JSON.parse(jsonStr);
     setStatus('');
     renderReport(analysis);
 
