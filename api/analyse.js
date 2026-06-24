@@ -1,5 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 
+export const config = { runtime: 'edge' };
+
 const ANALYSIS_PROMPT = (brandName, innName, context, auditType) => `You are a pharmaceutical brand and regulatory expert with deep knowledge of FDA drug labeling guidelines, EMA standards, and pharmaceutical brand design best practices.
 
 Analyse this pharmaceutical logo for the drug "${brandName}"${innName ? ` (INN/generic name: ${innName})` : ''}.
@@ -125,24 +127,31 @@ Scoring thresholds:
 - 50–79 → warn (acceptable but improvements needed)
 - 0–49 → fail (significant issues requiring remediation)
 
-FDA INN ratio rule (21 CFR 201.10(g)(1)): The established (generic/INN) name must appear in type at least half as large as the proprietary name on prescription drug labeling. Similar prominence requirements apply to promotional materials. Score 80+ if INN is visually ≥50% of brand name size, 50–79 if borderline (30–49%), below 50 if clearly non-compliant or INN is absent.
+FDA INN ratio rule (21 CFR 201.10(g)(1)): The established (generic/INN) name must appear in type at least half as large as the proprietary name on prescription drug labeling. Score 80+ if INN is visually ≥50% of brand name size, 50–79 if borderline (30–49%), below 50 if clearly non-compliant or INN is absent.
 
-Overall score = weighted average: regulatory tests 40%, visual tests 35%, brand tests 25%.
+Overall score = weighted average: regulatory tests 40%, visual tests 35%, brand tests 25%.`;
 
-Be specific, clinical, and reference exact FDA regulations where applicable.`;
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+  });
+}
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+export default async function handler(req) {
+  if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: corsHeaders });
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
-  const { imageBase64, mimeType, brandName, innName, context, auditType } = req.body;
+  const { imageBase64, mimeType, brandName, innName, context, auditType } = await req.json();
 
-  if (!imageBase64) return res.status(400).json({ error: 'imageBase64 is required' });
-  if (!brandName) return res.status(400).json({ error: 'brandName is required' });
+  if (!imageBase64) return json({ error: 'imageBase64 is required' }, 400);
+  if (!brandName) return json({ error: 'brandName is required' }, 400);
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -172,16 +181,15 @@ export default async function handler(req, res) {
     });
 
     const raw = response.content[0].text.trim();
-    // Strip markdown code fences if present
     const jsonStr = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```$/m, '').trim();
     const analysis = JSON.parse(jsonStr);
-    return res.status(200).json(analysis);
+    return json(analysis);
 
   } catch (err) {
     console.error('Analysis error:', err);
     if (err instanceof SyntaxError) {
-      return res.status(500).json({ error: 'Failed to parse AI response. Please try again.' });
+      return json({ error: 'Failed to parse AI response. Please try again.' }, 500);
     }
-    return res.status(500).json({ error: err.message || 'Analysis failed' });
+    return json({ error: err.message || 'Analysis failed' }, 500);
   }
 }
