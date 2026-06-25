@@ -149,6 +149,67 @@ function syncRunBtn() {
 }
 
 
+
+// ── Demo mode ──────────────────────────────────────────────────────────────
+const DEMO_DATA = {
+  overallScore: 68, overallStatus: 'warn',
+  summary: 'LUMIERA presents a professional pharmaceutical aesthetic with good regulatory legibility, but the INN-to-brand ratio requires attention for labelling compliance under 21 CFR 201.10(g)(1).',
+  drugName: 'LUMIERA', innName: 'adalimumab',
+  tests: {
+    fdaGuidance: { score:62, status:'warn', headline:'FDA labelling compliance is borderline due to INN prominence concerns.', detail:'The brand name dominates without sufficient visual emphasis on the INN.', regulations:['21 CFR 201.10(g)(1)','21 CFR 201.100(b)(1)'], recommendation:'Ensure INN appears at minimum 50% of brand name type size on all labelling.' },
+    innRatio: { score:45, status:'fail', headline:'INN is estimated at 30% of brand name size, below the 50% FDA minimum.', detail:'The proprietary name LUMIERA significantly outweighs the established name adalimumab in visual prominence.', labellingStatus:'fail', promotionalStatus:'warn', brandNameRelativeSize:10, innRelativeSize:3, estimatedRatioPercent:30, fdaRequirementPercent:50, recommendation:'Increase adalimumab type size to at least 50% of LUMIERA on all labelling.' },
+    regulatoryLegibility: { score:78, status:'warn', headline:'Type is legible at standard sizes but small-format legibility is marginal.', detail:'The typeface is clean above 8pt but letter spacing may cause issues on small labels.', recommendation:'Test legibility at 6pt minimum for pill bottle labels.' },
+    colorblindness: { score:82, status:'pass', headline:'Logo remains distinguishable across all major colour vision deficiencies.', detail:'The blue-on-white palette performs well for deuteranopia and protanopia but loses some depth under tritanopia.', affectedTypes:['tritanopia'], recommendation:'Consider adding a shape cue to reinforce recognition under tritanopia.' },
+    monochrome: { score:85, status:'pass', headline:'Performs well in greyscale and monochrome reproduction.', detail:'The high contrast between the navy wordmark and white background ensures fax and thermal print legibility.', faxPerformance:'pass', regulatorySubmissionRisk:'low', recommendation:'No changes required for monochrome applications.' },
+    contrast: { score:74, status:'warn', headline:'Strong on white but contrast drops significantly on dark backgrounds.', detail:'WCAG AA is met on white and light backgrounds, but no dark-background variant exists.', wcagLevel:'AA', darkBackgroundPerformance:'fail', recommendation:'Develop a white-reverse version for dark packaging and digital applications.' },
+    sizeScaling: { score:70, status:'warn', headline:'Logo is clear at 64px and above but detail is lost at 32px and below.', detail:'Fine typography in the tagline becomes illegible below 32px wide.', pillBottle:'warn', packageInsert:'pass', digitalAd:'pass', minimumRecommendedSize:'20mm width minimum', recommendation:'Create a simplified mark for small-format applications below 20mm.' },
+    balance: { score:80, status:'pass', headline:'Well-balanced composition with good visual weight distribution.', detail:'The horizontal layout distributes weight evenly with a slight left anchor from the symbol.', visualWeightDistribution:'centred', recommendation:'Maintain consistent clear space in all applications.' },
+    brandPersonality: { score:75, status:'warn', headline:'Communicates clinical authority but lacks warmth for patient-facing materials.', detail:'The mark reads as established and trustworthy to HCPs but may feel cold to patients.', traits:['Clinical','Authoritative'], recommendation:'Consider softening the mark for DTC materials while retaining the HCP version.' },
+    therapeuticAreaFit: { score:72, status:'warn', headline:'Blue palette aligns with immunology conventions but could be more distinctive.', detail:'The navy/blue palette is common in immunology and does not strongly differentiate from competitor brands.', inferredArea:'immunology', colorMoodAlignment:'neutral', recommendation:'Explore a secondary accent colour to differentiate within the category.' },
+    containersProportions: { score:78, status:'warn', headline:'Horizontal format is versatile but awkward in square containers.', detail:'The 3:1 aspect ratio works well for banners and inserts but requires cropping in icon formats.', aspectRatioAssessment:'overly wide', containerEffect:'No visible enclosure or framing elements', recommendation:'Develop a stacked version for square and vertical format applications.' }
+  }
+};
+
+function createDemoLogo() {
+  const cv = document.createElement('canvas');
+  cv.width = 600; cv.height = 200;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, 600, 200);
+  // Symbol
+  ctx.fillStyle = '#2563eb';
+  ctx.beginPath(); ctx.arc(100, 100, 60, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(76, 88, 48, 24); ctx.fillRect(88, 76, 24, 48);
+  // Brand name
+  ctx.fillStyle = '#1a2e4a';
+  ctx.font = 'bold 62px Georgia, serif';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('LUMIERA', 185, 82);
+  // INN
+  ctx.fillStyle = '#64748b';
+  ctx.font = '22px Arial, sans-serif';
+  ctx.fillText('adalimumab', 187, 138);
+  return cv;
+}
+
+function loadDemo() {
+  const cv = createDemoLogo();
+  imageMimeType = 'image/png';
+  const dataUrl = cv.toDataURL('image/png');
+  imageBase64 = dataUrl.split(',')[1];
+  logoImage = new Image();
+  logoImage.src = dataUrl;
+  brandNameInput.value = 'LUMIERA';
+  innNameInput.value = 'adalimumab';
+  logoPreview.src = dataUrl;
+  uploadPlaceholder.style.display = 'none';
+  previewArea.classList.add('visible');
+  hideError();
+  setStatus('');
+  renderReport(DEMO_DATA);
+}
+
 // ── Visual simulations ─────────────────────────────────────────────────────
 const MATRICES = {
   grayscale:    [0.299,0.587,0.114, 0.299,0.587,0.114, 0.299,0.587,0.114],
