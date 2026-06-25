@@ -89,23 +89,6 @@ Examine the logo carefully and return ONLY a valid JSON object — no markdown, 
       "visualWeightDistribution": "<e.g. centred, left-heavy, right-heavy>",
       "recommendation": "<one actionable recommendation>"
     },
-    "brandPersonality": {
-      "score": <integer 0-100>,
-      "status": "<pass|warn|fail>",
-      "headline": "<one sentence finding>",
-      "detail": "<1 sentence>",
-"traits": ["<trait 1>", "<trait 2>"],
-      "recommendation": "<one recommendation>"
-    },
-    "therapeuticAreaFit": {
-      "score": <integer 0-100>,
-      "status": "<pass|warn|fail>",
-      "headline": "<one sentence finding>",
-      "detail": "<1 sentence>",
-      "inferredArea": "<e.g. immunology, oncology, cardiology, rare disease>",
-      "colorMoodAlignment": "<positive|neutral|misaligned>",
-      "recommendation": "<one actionable recommendation>"
-    },
     "containersProportions": {
       "score": <integer 0-100>,
       "status": "<pass|warn|fail>",
@@ -125,7 +108,7 @@ Scoring thresholds:
 
 FDA INN ratio rule (21 CFR 201.10(g)(1)): The established (generic/INN) name must appear in type at least half as large as the proprietary name on prescription drug labeling. Score 80+ if INN is visually ≥50% of brand name size, 50–79 if borderline (30–49%), below 50 if clearly non-compliant or INN is absent.
 
-Overall score = weighted average: regulatory tests 40%, visual tests 35%, brand tests 25%.`;
+Overall score = weighted average: regulatory tests 45%, visual tests 55%.`;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
