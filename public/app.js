@@ -164,8 +164,6 @@ const DEMO_DATA = {
     contrast: { score:74, status:'warn', headline:'Strong on white but contrast drops significantly on dark backgrounds.', detail:'WCAG AA is met on white and light backgrounds, but no dark-background variant exists.', wcagLevel:'AA', darkBackgroundPerformance:'fail', recommendation:'Develop a white-reverse version for dark packaging and digital applications.' },
     sizeScaling: { score:70, status:'warn', headline:'Logo is clear at 64px and above but detail is lost at 32px and below.', detail:'Fine typography in the tagline becomes illegible below 32px wide.', pillBottle:'warn', packageInsert:'pass', digitalAd:'pass', minimumRecommendedSize:'20mm width minimum', recommendation:'Create a simplified mark for small-format applications below 20mm.' },
     balance: { score:80, status:'pass', headline:'Well-balanced composition with good visual weight distribution.', detail:'The horizontal layout distributes weight evenly with a slight left anchor from the symbol.', visualWeightDistribution:'centred', recommendation:'Maintain consistent clear space in all applications.' },
-    brandPersonality: { score:75, status:'warn', headline:'Communicates clinical authority but lacks warmth for patient-facing materials.', detail:'The mark reads as established and trustworthy to HCPs but may feel cold to patients.', traits:['Clinical','Authoritative'], recommendation:'Consider softening the mark for DTC materials while retaining the HCP version.' },
-    therapeuticAreaFit: { score:72, status:'warn', headline:'Blue palette aligns with immunology conventions but could be more distinctive.', detail:'The navy/blue palette is common in immunology and does not strongly differentiate from competitor brands.', inferredArea:'immunology', colorMoodAlignment:'neutral', recommendation:'Explore a secondary accent colour to differentiate within the category.' },
     containersProportions: { score:78, status:'warn', headline:'Horizontal format is versatile but awkward in square containers.', detail:'The 3:1 aspect ratio works well for banners and inserts but requires cropping in icon formats.', aspectRatioAssessment:'overly wide', containerEffect:'No visible enclosure or framing elements', recommendation:'Develop a stacked version for square and vertical format applications.' }
   }
 };
@@ -381,15 +379,12 @@ const TEST_CONFIG = {
   contrast:             { name: 'Contrast & Background',     icon: '◐',   bg: '#f0fdf4', cat: 'visual'     },
   sizeScaling:          { name: 'Size Scaling',              icon: '⊞',   bg: '#f0fdf4', cat: 'visual'     },
   balance:              { name: 'Balance',                   icon: '⚖',   bg: '#f0fdf4', cat: 'visual'     },
-  brandPersonality:     { name: 'Brand Personality',        icon: '✦',   bg: '#fdf4ff', cat: 'brand'      },
-  therapeuticAreaFit:   { name: 'Therapeutic Area Fit',     icon: '◈',   bg: '#fdf4ff', cat: 'brand'      },
-  containersProportions:{ name: 'Containers & Proportions', icon: '▣',   bg: '#fdf4ff', cat: 'brand'      },
+  containersProportions:{ name: 'Containers & Proportions', icon: '▣',   bg: '#f0fdf4', cat: 'visual'     },
 };
 
 const CATEGORIES = [
   { id: 'regulatory', label: 'Regulatory & Compliance', tests: ['fdaGuidance','innRatio','regulatoryLegibility'] },
-  { id: 'visual',     label: 'Visual Performance',      tests: ['colorblindness','monochrome','contrast','sizeScaling','balance'] },
-  { id: 'brand',      label: 'Brand',                   tests: ['brandPersonality','therapeuticAreaFit','containersProportions'] },
+  { id: 'visual',     label: 'Visual Performance',      tests: ['colorblindness','monochrome','contrast','sizeScaling','balance','containersProportions'] },
 ];
 
 function scoreColor(n) {
@@ -538,16 +533,6 @@ function buildDetail(id, test) {
         test.minimumRecommendedSize ? { label: 'Min. recommended size', value: test.minimumRecommendedSize, cls: '' } : null,
       ].filter(Boolean));
       h += sizeGrid();
-      break;
-
-    case 'brandPersonality':
-      if (test.traits?.length)
-        h += `<div class="trait-tags">${test.traits.map(t => `<span class="trait-tag">${esc(t)}</span>`).join('')}</div>`;
-      if (test.patientPerception || test.hcpPerception)
-        h += `<div class="perception-grid">
-          <div class="perception-card"><div class="perception-lbl">Patient perception</div><div class="perception-txt">${esc(test.patientPerception||'—')}</div></div>
-          <div class="perception-card"><div class="perception-lbl">HCP perception</div><div class="perception-txt">${esc(test.hcpPerception||'—')}</div></div>
-        </div>`;
       break;
 
     case 'colorblindness':
