@@ -625,3 +625,19 @@ main {
   image-rendering: crisp-edges;
   border: 1px solid #e2e8f0;
 }
+
+/* ── Demo button ────────────────────────────────────────────────────────────── */
+.demo-wrap { text-align: center; margin-top: 8px; }
+.demo-btn {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.demo-btn:hover { color: #1a2e4a; }
